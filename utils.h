@@ -10,8 +10,8 @@
  * @param hexValue: a Color in HEX-Format like #FFA617, exchange # with 0X
  * @return a OpenCV Scalar-object
  */
-cv::Scalar hexToCVScalar(int hexValue){
-    return cv::Scalar(((hexValue) & 0xFF),((hexValue >> 8) & 0xFF) ,((hexValue >> 16) & 0xFF));
+cv::Scalar hexToCVScalar(int hexValue) {
+    return cv::Scalar(((hexValue) & 0xFF), ((hexValue >> 8) & 0xFF), ((hexValue >> 16) & 0xFF));
 }
 
 /**
@@ -63,7 +63,7 @@ void RuntimeGUI::notify(const Configuration &conf) {
     gui = cv::Scalar(40, 40, 40);
 
     // Get the status marker
-    int statusCol = 0.75 * gui.cols;
+    int statusCol = static_cast<int>(0.75 * gui.cols);
 
     // Write the status
     std::stringstream ss;
@@ -91,7 +91,7 @@ void RuntimeGUI::notify(const Configuration &conf) {
                 0.9,
                 cv::Scalar(255, 255, 255));
     ss.str("");
-    ss << "criticality = " << conf.getCriticality();
+    ss << "criticality = " << conf.calcCriticality();
     cv::putText(gui,
                 ss.str(),
                 cv::Point(statusCol, 60),
@@ -129,8 +129,8 @@ void RuntimeGUI::notify(const Configuration &conf) {
     int width = static_cast<int>(maxX) - static_cast<int>(minX);
     int height = static_cast<int>(maxY) - static_cast<int>(minY);
     float compression = static_cast<float>(statusCol - 10) / static_cast<float>(width);
-    if (height * compression > gui.rows - 10) {
-        compression = (gui.rows - 10) / height;
+    if ((float) height * compression > (float) gui.rows - 10) {
+        compression = (float) (gui.rows - 10) / (float) height;
     }
 
     // Calculate the highest height to rescale colors
@@ -148,11 +148,13 @@ void RuntimeGUI::notify(const Configuration &conf) {
     // Paint the spins
     for (size_t i = 0; i < maxX * maxY; i++) {
         cv::Point p1;
-        p1.x = static_cast<float>(i % maxX) * compression + 10;
-        p1.y = static_cast<float>(i / maxY) * compression + 10;
+        p1.x = static_cast<int>(static_cast<float>(i % maxX) * compression + 10);
+        // int division is explicit done here
+        p1.y = static_cast<int>(static_cast<float>(i / maxY) * compression + 10);
 
         static const int numOfColors = 7;
-        float range = static_cast<float>(conf.getCells()[i].getHeight() - minHeight) / static_cast<float>(maxHeight - minHeight) * numOfColors;
+        float range = static_cast<float>(conf.getCells()[i].getHeight() - minHeight) /
+                      static_cast<float>(maxHeight - minHeight) * numOfColors;
 
         auto color = cv::Scalar();
         // Color-palette from https://gka.github.io/palettes/#/7|d|ff006a,ffffff,ffffff|ffffff,ffffff,0088d7|1|1

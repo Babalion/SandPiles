@@ -6,29 +6,40 @@
 
 
 Configuration::Configuration(unsigned int fieldWidth, unsigned int criticalSlope) :
-        fieldWidth(fieldWidth), criticalSlope(criticalSlope), time(0) {
-    cells = std::vector<Cell>(fieldWidth * fieldWidth);
+        fieldWidth(fieldWidth), criticalSlope(criticalSlope), cells(fieldWidth * fieldWidth), time(0), mt(rd()),
+        u(0, 20) {
     initRandom();
 }
 
 
-Configuration::Configuration(std::vector<Cell> &cells_, unsigned int criticalSlope) :
-        criticalSlope(criticalSlope), time(0) {
-    fieldWidth = sqrt(cells_.size());
+Configuration::Configuration(const std::vector<Cell> &cells_, unsigned int criticalSlope) :
+        criticalSlope(criticalSlope), time(0), mt(rd()), u(0, 20) {
+    fieldWidth = static_cast<unsigned int>(std::sqrt(cells_.size()));
     cells = cells_;
     updateSlopes();
 }
 
-/**
- * initializes cells and slope-cells
- * it calculates random numbers between 0 and 20 for cells
- * slope-cells are derived from cells
- */
-void Configuration::initRandom() {
-    std::random_device rd;
-    std::mt19937 mt(rd());
+// -----------------------------------------------------------------------------------
+// ------------------GETTER AND SETTERS-----------------------------------------------
+// -----------------------------------------------------------------------------------
 
-    std::uniform_int_distribution u(0, 20);
+const std::vector<Cell> &Configuration::getCells() const {
+    return cells;
+}
+
+const unsigned int &Configuration::getFieldWidth() const {
+    return fieldWidth;
+}
+
+const unsigned int &Configuration::getTime() const {
+    return time;
+}
+
+// -----------------------------------------------------------------------------------
+// ------------------METHODS----------------------------------------------------------
+// -----------------------------------------------------------------------------------
+
+void Configuration::initRandom() {
     //init cells with random height
     for (auto &cell : cells) {
         cell.setHeight(u(mt));
@@ -36,10 +47,7 @@ void Configuration::initRandom() {
     updateSlopes();
 }
 
-/**
- * Prints out heights of each cell to the console
- */
-void Configuration::printToConsole() {
+[[maybe_unused]] void Configuration::printToConsole() {
     // output cells
     std::cout << "Cells:" << std::endl;
     for (size_t i = 0; i < cells.size(); ++i) {
@@ -61,17 +69,6 @@ void Configuration::printToConsole() {
     }
 }
 
-const std::vector<Cell> &Configuration::getCells() const {
-    return cells;
-}
-
-unsigned int Configuration::getFieldWidth() const {
-    return fieldWidth;
-}
-
-/**
- * Calculates the slopeToNeighbours based on the actual cell height and
- */
 void Configuration::updateSlopes() {
     for (size_t x = 0; x < fieldWidth; ++x) {
         for (size_t y = 0; y < fieldWidth; ++y) {
@@ -101,11 +98,6 @@ void Configuration::updateSlopes() {
     }
 }
 
-/**
- * Performs a timeStep. Therefore updates each cell and increases neighbours if critical slope of cell is reached.
- * Also updates slopes.
- * Doesn't add sand!
- */
 void Configuration::runTime() {
     //reduce critical cells by 4 and increase neighbour cells by 1
     for (size_t i = 0; i < cells.size(); ++i) {
@@ -134,18 +126,12 @@ void Configuration::runTime() {
     time++;
 }
 
-/**
- * adds a sand-corn to the middle of the field
- */
 void Configuration::addSand() {
     //we add a corn of sand in the middle of the cells field
     cells[(fieldWidth - 1) * (fieldWidth - 1) / 2 + fieldWidth / 2].incHeight();
     updateSlopes();
 }
 
-/**
- * @return sum over all cell-heights
- */
 unsigned int Configuration::amountOfSand() const {
     unsigned int amountOfSand = 0;
     for (auto &cell : cells) {
@@ -154,9 +140,6 @@ unsigned int Configuration::amountOfSand() const {
     return amountOfSand;
 }
 
-/**
- * @return the maximum height of all cells
- */
 unsigned int Configuration::maxHeight() const {
     unsigned int maxHeight = cells[0].getHeight();
 
@@ -166,9 +149,6 @@ unsigned int Configuration::maxHeight() const {
     return maxHeight;
 }
 
-/**
- * @return the minimum height of all cells
- */
 unsigned int Configuration::minHeight() const {
     unsigned int minHeight = cells[0].getHeight();
 
@@ -178,20 +158,10 @@ unsigned int Configuration::minHeight() const {
     return minHeight;
 }
 
-/**
- * sums up all slopesToNeighbours from all cells which are greater than 0
- * thus all slopes from mountains downwards, not from valleys upwards
- * @return criticality greater or equal 0
- */
-unsigned int Configuration::getCriticality() const {
+unsigned int Configuration::calcCriticality() const {
     unsigned int criticality = 0;
     for (auto &cell:cells) {
         criticality += std::max(0, cell.getSlopeToNeighbours());
     }
     return criticality;
 }
-
-unsigned int Configuration::getTime() const {
-    return time;
-}
-

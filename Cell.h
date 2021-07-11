@@ -2,29 +2,51 @@
 // Created by chris on 06.05.21.
 //
 
-#ifndef NUMERISCHEMETHODENSTATISTISCHENPHYSIK_CELL_H
-#define NUMERISCHEMETHODENSTATISTISCHENPHYSIK_CELL_H
-
+#pragma once
 
 class Cell {
 public:
-    Cell();
-    //initializes with given height
-    explicit Cell(unsigned int height);
+    Cell() = default;
 
-    [[nodiscard]] unsigned int getHeight() const;//("Why you ask for height and don't use it?")
-    void setHeight(unsigned int height_);
+    //initializes with given height
+    explicit Cell(unsigned int height) : height(0), slopeToNeighbours(0) {};
+
+// -----------------------------------------------------------------------------------
+// ------------------GETTER AND SETTERS-----------------------------------------------
+// -----------------------------------------------------------------------------------
+
+    [[nodiscard]] unsigned int getHeight() const {
+        return height;
+    }
+
+    void setHeight(unsigned int height) {
+        Cell::height = height;
+        slopeToNeighbours = 0;
+    }
+
+    [[nodiscard]] int getSlopeToNeighbours() const {
+        return slopeToNeighbours;
+    }
+
+    void setSlopeToNeighbours(int slopeToNeighbours) {
+        Cell::slopeToNeighbours = slopeToNeighbours;
+    }
+
+// -----------------------------------------------------------------------------------
+// ------------------METHODS----------------------------------------------------------
+// -----------------------------------------------------------------------------------
+
     //increases height by 1
-    void incHeight();
-    friend bool operator==(const Cell &lhs,const  Cell &rhs);
+    void incHeight() {
+        height++;
+    }
+
+    friend bool operator==(const Cell &lhs, const Cell &rhs) {
+        return (lhs.height == rhs.height) && (lhs.getSlopeToNeighbours() == rhs.getSlopeToNeighbours());
+    }
 
 private:
     unsigned int height;
     int slopeToNeighbours;
-public:
-    int getSlopeToNeighbours() const;
-    void setSlopeToNeighbours(int slopeToNeighbours);
 };
 
-
-#endif //NUMERISCHEMETHODENSTATISTISCHENPHYSIK_CELL_H
