@@ -5,6 +5,11 @@
 
 #include "Configuration.h"
 
+#include <filesystem>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 /**
  * a function for convenience creating a Scalar from HEX-colors
  * @param hexValue: a Color in HEX-Format like #FFA617, exchange # with 0X
@@ -39,6 +44,13 @@ public:
      * Paint the gui
      */
     void notify(const Configuration &conf);
+
+    /**
+     * Save the gui-frame as image to disk
+     * @param imageName name to save the image to
+     * @param pathname must end with a /
+     */
+    void saveImageToDisk(const unsigned int &imageNumber, const std::string &pathname);
 
 
     /**
@@ -178,4 +190,62 @@ void RuntimeGUI::notify(const Configuration &conf) {
 
     cv::imshow("GUI", gui);
     cv::waitKey(waitTime);
+}
+
+/**
+ * Save the gui-frame as image to disk
+ * @param imageNumber to save the image to
+ * @param pathname must end with a /
+ */
+void RuntimeGUI::saveImageToDisk(const unsigned int &imageNumber, const std::string &pathname) {
+    struct stat info{};
+
+    //filenames should have leading zeros
+    std::string imageName =
+            "frame" + std::string(5 - std::to_string(imageNumber).length(), '0') +
+            std::to_string(imageNumber) + ".png";
+    std::cout << imageName << std::endl;
+
+    /// Try to create a directory to save images to
+    if (stat(pathname.c_str(), &info) != 0) {
+        std::cout << "cannot access, try to create now. " << pathname << std::endl;
+        try {
+            std::filesystem::create_directories(pathname);
+        } catch (const std::exception &e) { // caught by reference to base
+            std::cout << " a standard exception was caught, with message '"
+                      << e.what() << "'\n";
+            exit(1);
+        }
+    } else if (info.st_mode & S_IFDIR) {  // S_ISDIR() doesn't exist on my windows
+#ifdef DEBUG
+        std::cout << pathname << " is a directory" << std::endl;
+#endif
+    } else {
+        std::cerr << pathname << "is no directory" << std::endl;
+        exit(2);
+    }
+
+    // compression params from https://docs.opencv.org/3.4/d4/da8/group__imgcodecs.html#gabbc7ef1aa2edfaa87772f1202d67e0ce
+    static const std::vector<int> compression_params{cv::IMWRITE_PNG_COMPRESSION, 9};
+
+    std::string filePath = pathname;
+    filePath = filePath.append(imageName);
+
+    bool result = false;
+    try {
+        result = cv::imwrite(filePath, gui, compression_params);
+    }
+    catch (const cv::Exception &ex) {
+        fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+    }
+    if (result)
+#ifdef DEBUG
+        printf("Saved PNG file.\n");
+#else
+        ;
+#endif
+    else {
+        printf("ERROR: Can't save PNG file.\n");
+        exit(3);
+    }
 }

@@ -9,7 +9,7 @@ public:
     Cell() = default;
 
     //initializes with given height
-    explicit Cell(unsigned int height) : height(0), slopeToNeighbours(0) {};
+    explicit Cell(unsigned int height) : height(height), slopeToNeighbours(0) {};
 
 // -----------------------------------------------------------------------------------
 // ------------------GETTER AND SETTERS-----------------------------------------------

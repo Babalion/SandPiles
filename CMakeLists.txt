@@ -13,5 +13,5 @@ set(BUILD_ARCH "-m64")
 
 file(GLOB sandPilesCPPs CONFIGURE_DEPENDS *.cpp)
 add_executable(SandPiles ${sandPilesCPPs})
-target_link_libraries(SandPiles ${OpenCV_LIBS})
+target_link_libraries(SandPiles ${OpenCV_LIBS} stdc++fs)
 set_target_properties(SandPiles PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
